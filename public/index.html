@@ -6,10 +6,10 @@
   </head>
   <body>
     <ul id="messages"></ul>
-    <form id="form">
-        
-        <button>Create new post</button>    
-    </form>
+    <div id="contorls">
+      <input id="input" autocomplete="off>" placeholder="Type a message..." />
+      <button id="postBtn">Post</button>
+    </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="client.js"></script>
