@@ -6,15 +6,28 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Serve static files (like index.html)
 app.use(express.static("public"));
 
-// Handle socket connections
+// Store messages in memory
+let messages = [];
+
 io.on("connection", (socket) => {
   console.log("A user connected");
 
+  // Send existing chat history to new user
+  socket.emit("chat history", messages);
+
+  // Listen for new messages
   socket.on("chat message", (msg) => {
-    io.emit("chat message", msg); // broadcast to everyone
+    const newMsg = { text: msg, time: new Date().toISOString() };
+    messages.push(newMsg);
+
+    // (Optional) Limit history to last 50 messages
+    if (messages.length > 50) {
+      messages.shift();
+    }
+
+    io.emit("chat message", newMsg);
   });
 
   socket.on("disconnect", () => {
