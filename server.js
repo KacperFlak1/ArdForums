@@ -8,30 +8,23 @@ const io = new Server(server);
 
 app.use(express.static("public"));
 
-// Store messages in memory
-let messages = [];
+// Store posts in memory
+let posts = [];
 
 io.on("connection", (socket) => {
   console.log("A user connected");
 
-  // Send existing chat history to new user
-  socket.emit("chat history", messages);
+  // Send existing posts to new client
+  socket.emit("post history", posts);
 
-  // Listen for new messages
-  socket.on("chat message", (msg) => {
-    const newMsg = { text: msg, time: new Date().toISOString() };
-    messages.push(newMsg);
+  // Handle new posts
+  socket.on("new post", (post) => {
+    posts.push(post);
 
-    // (Optional) Limit history to last 50 messages
-    if (messages.length > 50) {
-      messages.shift();
-    }
+    // Limit history to last 20
+    if (posts.length > 20) posts.shift();
 
-    io.emit("chat message", newMsg);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("User disconnected");
+    io.emit("new post", post); // send to everyone
   });
 });
 
