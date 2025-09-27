@@ -1,25 +1,29 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Chat App</title>
+    <title>Post App with Modal</title>
     <link rel="stylesheet" href="style.css">
   </head>
   <body>
+    <h1>Posts</h1>
+    <button id="openModal">New Post</button>
+
+    <!-- Modal -->
     <div id="modal" class="modal">
       <div class="modal-content">
-        <span id ="closeModal" class="close">&times;</span>
-        <h2>Create A post</h2>
+        <span id="closeModal" class="close">&times;</span>
+        <h2>Create a Post</h2>
         <form id="postForm">
-          <input type="text" id="title" placeholder="Enter your Title" required />
-          <textarea id="message" placeholder="Enter your message" required></textarea><br>
-          <input type="text" id="image" placeholder="Enter image URL" />
+          <input type="text" id="title" placeholder="Title" required /><br>
+          <input type="text" id="image" placeholder="Image URL" /><br>
+          <textarea id="context" placeholder="Write something..." required></textarea><br>
           <button type="submit">Post</button>
         </form>
       </div>
     </div>
 
-    <div id=""posts></div>
-    
+    <div id="posts"></div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script src="client.js"></script>
   </body>
