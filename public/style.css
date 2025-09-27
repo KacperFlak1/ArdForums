@@ -1,36 +1,59 @@
 body {
-  font-family: sans-serif;
-  margin: 0;
-  padding: 0;
+  font-family: Arial, sans-serif;
+  margin: 20px;
   background: #f4f4f4;
 }
 
-#messages {
-  list-style: none;
-  margin: 0;
-  padding: 10px;
-  height: 80vh;
-  overflow-y: scroll;
-  background: #fff;
-  border-bottom: 1px solid #ddd;
-}
-
-#form {
-  display: flex;
-  padding: 10px;
-  background: #eee;
-}
-
-#input {
-  flex: 1;
-  padding: 10px;
-  font-size: 16px;
-}
-
 button {
-  padding: 10px;
+  padding: 10px 15px;
   background: #007bff;
   color: white;
   border: none;
   cursor: pointer;
+  margin-bottom: 20px;
+}
+
+/* Modal Background */
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background: rgba(0,0,0,0.6);
+}
+
+/* Modal Content */
+.modal-content {
+  background: #fff;
+  margin: 10% auto;
+  padding: 20px;
+  border-radius: 8px;
+  width: 400px;
+  position: relative;
+}
+
+/* Close Button */
+.close {
+  position: absolute;
+  right: 15px;
+  top: 10px;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.post {
+  background: #fff;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 5px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
+
+.post img {
+  max-width: 100%;
+  margin: 10px 0;
 }

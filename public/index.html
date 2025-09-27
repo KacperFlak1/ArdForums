@@ -5,12 +5,17 @@
     <link rel="stylesheet" href="style.css">
   </head>
   <body>
-    <ul id="messages"></ul>
-    <div id="contorls">
-      <input id="input" autocomplete="off>" placeholder="Type a message..." />
-      <button id="postBtn">Post</button>
+    <div id="modal" class="modal">
+      <div class="modal-content">
+        <span id ="closeModal" class="close">&times;</span>
+        <h2>Create A post</h2>
+        <form id="postForm">
+          <input type="text" id="title" placeholder="Enter your Title" required />
+          <textarea id="message" placeholder="Enter your message" required></textarea><br>
+          <input type="text" id="image" placeholder="Enter image URL" />
+          <button type="submit">Post</button>
+      </div>
     </div>
-
     <script src="/socket.io/socket.io.js"></script>
     <script src="client.js"></script>
   </body>
