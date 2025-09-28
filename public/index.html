@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Retro Forum Posts</title>
+  <title>Retro Forum</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body class="dark">
@@ -11,24 +11,38 @@
     <h1>Retro Forum</h1>
     <div class="controls">
       <button id="toggleTheme">Toggle Dark/Light</button>
+      <button id="openSettings">Settings</button>
       <button id="openModal">New Post</button>
     </div>
   </header>
 
-  <!-- Modal -->
-  <div id="modal" class="modal" aria-hidden="true">
+  <!-- Post Modal -->
+  <div id="modal" class="modal">
     <div class="modal-content">
-      <span id="closeModal" class="close" title="Close">&times;</span>
+      <span id="closeModal" class="close">&times;</span>
       <h2>Create a Post</h2>
-
       <form id="postForm">
-        <input type="text" id="author" placeholder="Author (optional)" maxlength="100" />
-        <input type="text" id="title" placeholder="Title" required maxlength="200" />
-        <input type="text" id="image" placeholder="Image URL (optional)" />
-        <textarea id="context" placeholder="Write your message..." required maxlength="5000"></textarea>
+        <input type="text" id="title" placeholder="Title" required />
+        <textarea id="context" placeholder="Write your message..." required></textarea>
         <div class="form-actions">
           <button type="submit">Post</button>
           <button type="button" id="cancelPost">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="modal">
+    <div class="modal-content">
+      <span id="closeSettings" class="close">&times;</span>
+      <h2>Settings</h2>
+      <form id="settingsForm">
+        <input type="text" id="username" placeholder="Your name" />
+        <input type="text" id="avatarUrl" placeholder="Avatar URL" />
+        <textarea id="signature" placeholder="Signature text"></textarea>
+        <div class="form-actions">
+          <button type="submit">Save</button>
         </div>
       </form>
     </div>

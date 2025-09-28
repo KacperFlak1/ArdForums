@@ -1,107 +1,92 @@
-// client.js
 document.addEventListener("DOMContentLoaded", () => {
   const socket = io();
-
   const postsDiv = document.getElementById("posts");
-  const modal = document.getElementById("modal");
-  const openModalBtn = document.getElementById("openModal");
-  const closeModalBtn = document.getElementById("closeModal");
-  const cancelPostBtn = document.getElementById("cancelPost");
-  const postForm = document.getElementById("postForm");
-  const toggleThemeBtn = document.getElementById("toggleTheme");
-  const body = document.body;
 
-  // Debug helper
-  function dbg(...args) { console.log("[client]", ...args); }
+  // --- SETTINGS ---
+  const settingsModal = document.getElementById("settingsModal");
+  const openSettingsBtn = document.getElementById("openSettings");
+  const closeSettingsBtn = document.getElementById("closeSettings");
+  const settingsForm = document.getElementById("settingsForm");
 
-  // Theme toggle
-  toggleThemeBtn.addEventListener("click", () => {
-    if (body.classList.contains("dark")) {
-      body.classList.remove("dark");
-      body.classList.add("light");
-      body.style.background = "#f4f4f4";
-      body.style.color = "#111";
-    } else {
-      body.classList.remove("light");
-      body.classList.add("dark");
-      body.style.background = "";
-      body.style.color = "";
-    }
-  });
+  let userSettings = JSON.parse(localStorage.getItem("userSettings")) || {
+    username: "Anonymous",
+    avatarUrl: "",
+    signature: ""
+  };
 
-  // Modal control
-  openModalBtn.addEventListener("click", () => {
-    modal.style.display = "flex";
-    modal.setAttribute("aria-hidden", "false");
-  });
-
-  closeModalBtn.addEventListener("click", closeModal);
-  cancelPostBtn.addEventListener("click", closeModal);
-
-  window.addEventListener("click", (e) => {
-    if (e.target === modal) closeModal();
-  });
-
-  function closeModal() {
-    modal.style.display = "none";
-    modal.setAttribute("aria-hidden", "true");
-    postForm.reset();
+  function saveSettings(newSettings) {
+    userSettings = { ...userSettings, ...newSettings };
+    localStorage.setItem("userSettings", JSON.stringify(userSettings));
   }
 
-  // socket events
-  socket.on("connect", () => dbg("connected to server", socket.id));
-  socket.on("post history", (history) => {
-    dbg("got post history", history.length);
-    postsDiv.innerHTML = "";
-    history.forEach(renderPost);
+  openSettingsBtn.addEventListener("click", () => {
+    settingsModal.style.display = "flex";
+    document.getElementById("username").value = userSettings.username;
+    document.getElementById("avatarUrl").value = userSettings.avatarUrl;
+    document.getElementById("signature").value = userSettings.signature;
+  });
+  closeSettingsBtn.addEventListener("click", () => settingsModal.style.display = "none");
+
+  settingsForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    saveSettings({
+      username: document.getElementById("username").value.trim() || "Anonymous",
+      avatarUrl: document.getElementById("avatarUrl").value.trim(),
+      signature: document.getElementById("signature").value.trim()
+    });
+    settingsModal.style.display = "none";
   });
 
-  socket.on("new post", (post) => {
-    dbg("new post arrived", post);
-    renderPost(post);
-  });
+  // --- POSTS ---
+  const postForm = document.getElementById("postForm");
 
-  // Form submit
   postForm.addEventListener("submit", (e) => {
     e.preventDefault();
     const post = {
-      author: document.getElementById("author").value.trim() || "Anonymous",
+      author: userSettings.username,
+      image: userSettings.avatarUrl,
+      signature: userSettings.signature,
       title: document.getElementById("title").value.trim(),
-      image: document.getElementById("image").value.trim(),
       context: document.getElementById("context").value.trim()
     };
-
-    if (!post.title || !post.context) {
-      alert("Please enter a title and message.");
-      return;
-    }
-
-    dbg("emitting new post", post);
     socket.emit("new post", post);
-    closeModal();
+    postForm.reset();
+    document.getElementById("modal").style.display = "none";
   });
 
-  // Render function (forum style)
+  // --- SOCKET EVENTS ---
+  socket.on("post history", (history) => {
+    postsDiv.innerHTML = "";
+    history.forEach(renderPost);
+  });
+  socket.on("new post", renderPost);
+
+  // --- RENDER FUNCTION ---
   function renderPost(post) {
     const container = document.createElement("div");
     container.className = "post";
 
-    // AUTHOR COLUMN
     const authorCol = document.createElement("div");
     authorCol.className = "post-author";
 
-    // avatar placeholder (initials)
     const avatar = document.createElement("div");
     avatar.className = "avatar";
-    const initials = String(post.author || "A").trim().slice(0,2).toUpperCase();
-    avatar.textContent = initials;
+    if (post.image) {
+      const img = document.createElement("img");
+      img.src = post.image;
+      img.style.width = "80px";
+      img.style.height = "80px";
+      avatar.textContent = "";
+      avatar.appendChild(img);
+    } else {
+      avatar.textContent = post.author[0].toUpperCase();
+    }
     authorCol.appendChild(avatar);
 
     const name = document.createElement("h4");
-    name.textContent = post.author || "Anonymous";
+    name.textContent = post.author;
     authorCol.appendChild(name);
 
-    // CONTENT COLUMN
     const contentCol = document.createElement("div");
     contentCol.className = "post-content";
 
@@ -109,24 +94,18 @@ document.addEventListener("DOMContentLoaded", () => {
     title.textContent = post.title;
     contentCol.appendChild(title);
 
-    const paragraph = document.createElement("p");
-    paragraph.textContent = post.context;
-    contentCol.appendChild(paragraph);
+    const body = document.createElement("p");
+    body.textContent = post.context;
+    contentCol.appendChild(body);
 
-    // If post has an image URL, show it under the text
-    if (post.image) {
-      try {
-        const img = document.createElement("img");
-        img.src = post.image;
-        img.alt = post.title;
-        // show the image only after it loads (prevents broken-image empty box)
-        img.addEventListener("error", () => {
-          img.remove(); // remove broken image
-        });
-        contentCol.appendChild(img);
-      } catch (err) {
-        // ignore
-      }
+    if (post.signature) {
+      const sig = document.createElement("p");
+      sig.style.borderTop = "1px dashed #555";
+      sig.style.marginTop = "10px";
+      sig.style.fontSize = "12px";
+      sig.style.color = "#aaa";
+      sig.textContent = post.signature;
+      contentCol.appendChild(sig);
     }
 
     const time = document.createElement("small");
@@ -135,8 +114,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     container.appendChild(authorCol);
     container.appendChild(contentCol);
-
-    // newest on top
     postsDiv.prepend(container);
   }
+
+  // --- MODAL OPEN/CLOSE ---
+  const modal = document.getElementById("modal");
+  document.getElementById("openModal").addEventListener("click", () => modal.style.display = "flex");
+  document.getElementById("closeModal").addEventListener("click", () => modal.style.display = "none");
+  document.getElementById("cancelPost").addEventListener("click", () => modal.style.display = "none");
+  window.addEventListener("click", e => { if (e.target === modal || e.target === settingsModal) { modal.style.display = "none"; settingsModal.style.display = "none"; }});
 });
