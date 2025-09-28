@@ -13,6 +13,16 @@ header {
   border-bottom: 2px solid #555;
 }
 
+header h1 {
+  margin: 0;
+}
+
+nav a {
+  color: #fff;
+  margin: 0 10px;
+  text-decoration: none;
+}
+
 .forum-container {
   width: 80%;
   margin: 20px auto;
