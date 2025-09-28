@@ -12,9 +12,10 @@ app.use(bodyParser.json());
 
 // In-memory storage
 let users = []; // { username, password }
-let messages = [];
+let threads = {
+  general: [],
+};
 
-// Signup
 app.post("/signup", (req, res) => {
   const { username, password } = req.body;
   if (users.find((u) => u.username === username)) {
@@ -24,7 +25,6 @@ app.post("/signup", (req, res) => {
   return res.json({ success: true });
 });
 
-// Login
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
   const user = users.find((u) => u.username === username && u.password === password);
@@ -38,24 +38,40 @@ app.post("/login", (req, res) => {
 io.on("connection", (socket) => {
   console.log("✅ A user connected");
 
-  // Send history
   socket.on("join", (username) => {
     socket.username = username;
-    socket.emit("chat history", messages);
+    socket.thread = "general"; // default
+    socket.join("general");
+    socket.emit("chat history", { thread: "general", messages: threads.general });
   });
 
-  // New messages
+  // Switch threads
+  socket.on("switch thread", (threadName) => {
+    if (!threads[threadName]) threads[threadName] = [];
+    socket.leave(socket.thread);
+    socket.thread = threadName;
+    socket.join(threadName);
+    socket.emit("chat history", { thread: threadName, messages: threads[threadName] });
+  });
+
+  // Create thread
+  socket.on("create thread", (threadName) => {
+    if (!threads[threadName]) threads[threadName] = [];
+    io.emit("thread list", Object.keys(threads));
+  });
+
+  // Handle messages
   socket.on("chat message", (msg) => {
-    const newMsg = { user: socket.username, text: msg, time: new Date().toISOString() };
-    messages.push(newMsg);
-    if (messages.length > 50) messages.shift();
-    io.emit("chat message", newMsg);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("❌ User disconnected");
+    const newMsg = {
+      user: socket.username,
+      text: msg,
+      time: new Date().toISOString(),
+    };
+    threads[socket.thread].push(newMsg);
+    if (threads[socket.thread].length > 50) threads[socket.thread].shift();
+    io.to(socket.thread).emit("chat message", newMsg);
   });
 });
-
+ 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`🚀 Running on http://localhost:${PORT}`));
