@@ -124,3 +124,18 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("cancelPost").addEventListener("click", () => modal.style.display = "none");
   window.addEventListener("click", e => { if (e.target === modal || e.target === settingsModal) { modal.style.display = "none"; settingsModal.style.display = "none"; }});
 });
+
+// --- Badge --- //
+const badgeContainer = document.createElement("div");
+badgeContainer.className = "badges";
+
+// post.badges is JSON array like ["Admin","VIP"]
+(JSON.parse(post.badges || "[]")).forEach(badgeName => {
+  const span = document.createElement("span");
+  span.className = "badge";
+  span.textContent = badgeName;
+  badgeContainer.appendChild(span);
+});
+
+authorCol.appendChild(badgeContainer);
+
