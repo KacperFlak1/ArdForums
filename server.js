@@ -53,11 +53,27 @@ CREATE TABLE IF NOT EXISTS posts (
 app.use(
   session({
     store: new SQLiteStore({ db: "sessions.db", dir: "./data" }),
-    secret: "supersecret",
+    secret: process.env.SESSION_SECRET || "supersecret",
     resave: false,
     saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
+    }
   })
 );
+
+// --- Middleware to pass user data to templates ---
+app.use(async (req, res, next) => {
+  if (req.session.userId) {
+    const user = await db.get("SELECT * FROM users WHERE id = ?", [req.session.userId]);
+    if (user) {
+      user.badges = JSON.parse(user.badges || "[]");
+      res.locals.user = user;
+    }
+  }
+  next();
+});
 
 // --- Routes ---
 app.get("/", async (req, res) => {
@@ -83,6 +99,15 @@ app.get("/post/:id", async (req, res) => {
   if (!post) return res.status(404).send("Post not found");
   post.badges = JSON.parse(post.badges || "[]");
   res.render("post", { post });
+});
+
+// --- Login/Register page routes ---
+app.get("/login", (req, res) => {
+  res.render("login");
+});
+
+app.get("/register", (req, res) => {
+  res.render("register");
 });
 
 // --- Register/Login ---
@@ -118,5 +143,22 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
+// --- Post creation route ---
+app.post("/create-post", async (req, res) => {
+  if (!req.session.userId) return res.status(401).send("Not logged in");
+  const { title, content } = req.body;
+  if (!title || !content) return res.status(400).send("Missing fields");
+  
+  const time = new Date().toISOString();
+  await db.run(
+    "INSERT INTO posts (user_id, title, content, time) VALUES (?,?,?,?)",
+    [req.session.userId, title, content, time]
+  );
+  res.redirect("/");
+});
+
 // --- Start server ---
-const PORT = process.env.PORT || 30
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
