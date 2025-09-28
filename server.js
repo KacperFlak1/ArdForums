@@ -5,8 +5,7 @@ import bcrypt from "bcrypt";
 import expressLayouts from "express-ejs-layouts";
 import path from "path";
 import { fileURLToPath } from "url";
-import sqlite3 from "sqlite3";
-import { open } from "sqlite";
+import Database from "better-sqlite3";
 import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -28,9 +27,9 @@ app.use(expressLayouts);
 app.set("layout", "layout");
 
 // --- SQLite database ---
-const db = await open({ filename: "./data/data.db", driver: sqlite3.Database });
+const db = new Database("./data/data.db");
 
-await db.exec(`
+db.exec(`
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   username TEXT UNIQUE NOT NULL,
@@ -39,7 +38,7 @@ CREATE TABLE IF NOT EXISTS users (
   badges TEXT DEFAULT '[]'
 )`);
 
-await db.exec(`
+db.exec(`
 CREATE TABLE IF NOT EXISTS posts (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL,
@@ -64,9 +63,9 @@ app.use(
 );
 
 // --- Middleware to pass user data to templates ---
-app.use(async (req, res, next) => {
+app.use((req, res, next) => {
   if (req.session.userId) {
-    const user = await db.get("SELECT * FROM users WHERE id = ?", [req.session.userId]);
+    const user = db.prepare("SELECT * FROM users WHERE id = ?").get(req.session.userId);
     if (user) {
       user.badges = JSON.parse(user.badges || "[]");
       res.locals.user = user;
@@ -76,25 +75,25 @@ app.use(async (req, res, next) => {
 });
 
 // --- Routes ---
-app.get("/", async (req, res) => {
-  const posts = await db.all(`
+app.get("/", (req, res) => {
+  const posts = db.prepare(`
     SELECT posts.*, users.username, users.avatar, users.badges
     FROM posts
     JOIN users ON posts.user_id = users.id
     ORDER BY posts.id DESC
-  `);
+  `).all();
 
   posts.forEach(p => p.badges = JSON.parse(p.badges || "[]"));
   res.render("index", { posts });
 });
 
-app.get("/post/:id", async (req, res) => {
-  const post = await db.get(`
+app.get("/post/:id", (req, res) => {
+  const post = db.prepare(`
     SELECT posts.*, users.username, users.avatar, users.badges
     FROM posts
     JOIN users ON posts.user_id = users.id
     WHERE posts.id = ?
-  `, [req.params.id]);
+  `).get(req.params.id);
 
   if (!post) return res.status(404).send("Post not found");
   post.badges = JSON.parse(post.badges || "[]");
@@ -117,11 +116,8 @@ app.post("/register", async (req, res) => {
 
   const hash = await bcrypt.hash(password, 8);
   try {
-    const result = await db.run(
-      "INSERT INTO users (username, password) VALUES (?,?)",
-      [username, hash]
-    );
-    req.session.userId = result.lastID;
+    const result = db.prepare("INSERT INTO users (username, password) VALUES (?,?)").run(username, hash);
+    req.session.userId = result.lastInsertRowid;
     res.redirect("/");
   } catch (err) {
     res.status(400).send("Username taken");
@@ -130,7 +126,7 @@ app.post("/register", async (req, res) => {
 
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
-  const user = await db.get("SELECT * FROM users WHERE username=?", [username]);
+  const user = db.prepare("SELECT * FROM users WHERE username=?").get(username);
   if (!user) return res.status(400).send("Invalid login");
   const match = await bcrypt.compare(password, user.password);
   if (!match) return res.status(400).send("Invalid login");
@@ -144,16 +140,13 @@ app.get("/logout", (req, res) => {
 });
 
 // --- Post creation route ---
-app.post("/create-post", async (req, res) => {
+app.post("/create-post", (req, res) => {
   if (!req.session.userId) return res.status(401).send("Not logged in");
   const { title, content } = req.body;
   if (!title || !content) return res.status(400).send("Missing fields");
   
   const time = new Date().toISOString();
-  await db.run(
-    "INSERT INTO posts (user_id, title, content, time) VALUES (?,?,?,?)",
-    [req.session.userId, title, content, time]
-  );
+  db.prepare("INSERT INTO posts (user_id, title, content, time) VALUES (?,?,?,?)").run(req.session.userId, title, content, time);
   res.redirect("/");
 });
 
