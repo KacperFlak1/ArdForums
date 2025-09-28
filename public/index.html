@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Post App with Modal</title>
+    <title>Dark Mode Post App</title>
     <link rel="stylesheet" href="style.css">
   </head>
-  <body>
+  <body class="dark">
     <h1>Posts</h1>
+    <button id="toggleTheme">Toggle Dark/Light</button>
     <button id="openModal">New Post</button>
 
     <!-- Modal -->
@@ -25,6 +26,7 @@
     <div id="posts"></div>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script src="client.js"></script>
+    <!-- make sure client.js is loaded AFTER the DOM -->
+    <script src="client.js" defer></script>
   </body>
 </html>

@@ -28,5 +28,28 @@ io.on("connection", (socket) => {
   });
 });
 
+const modal = document.getElementById("modal");
+const openModalBtn = document.getElementById("openModal");
+const closeModalBtn = document.getElementById("closeModal");
+
+// Open modal
+openModalBtn.addEventListener("click", () => {
+  modal.style.display = "block";
+});
+
+// Close modal (X button)
+closeModalBtn.addEventListener("click", () => {
+  modal.style.display = "none";
+});
+
+// Close modal if clicking outside of it
+window.addEventListener("click", (e) => {
+  if (e.target === modal) {
+    modal.style.display = "none";
+  }
+});
+
+
+
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
