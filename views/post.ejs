@@ -3,19 +3,16 @@
 <div class="forum-container">
   <div class="post">
     <div class="post-user">
-      <img src="<%= post.pfp || '/uploads/default.png' %>" alt="pfp">
+      <img src="<%= post.avatar %>" alt="pfp">
       <div><strong><%= post.username %></strong></div>
       <div class="badges">
-        <% (post.badges || []).forEach(b => { %>
+        <% post.badges.forEach(b => { %>
           <span class="badge <%= b %>"><%= b %></span>
         <% }) %>
       </div>
     </div>
     <div class="post-content">
       <h3><%= post.title %></h3>
-      <% if (post.img) { %>
-        <img src="<%= post.img %>" style="max-width:200px; display:block; margin-bottom:10px;">
-      <% } %>
       <p><%= post.content %></p>
     </div>
   </div>

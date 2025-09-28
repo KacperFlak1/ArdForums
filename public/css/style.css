@@ -17,7 +17,7 @@ header h1 {
   margin: 0;
 }
 
-nav a {
+nav a, nav span {
   color: #fff;
   margin: 0 10px;
   text-decoration: none;

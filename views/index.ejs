@@ -1,22 +1,19 @@
 <% title = "Forum" %>
 
 <div class="forum-container">
-  <% posts.forEach((post, i) => { %>
+  <% posts.forEach(post => { %>
     <div class="post">
       <div class="post-user">
-        <img src="<%= post.pfp || '/uploads/default.png' %>" alt="pfp">
+        <img src="<%= post.avatar %>" alt="pfp">
         <div><strong><%= post.username %></strong></div>
         <div class="badges">
-          <% (post.badges || []).forEach(b => { %>
+          <% post.badges.forEach(b => { %>
             <span class="badge <%= b %>"><%= b %></span>
           <% }) %>
         </div>
       </div>
       <div class="post-content">
-        <h3><a href="/post/<%= i %>"><%= post.title %></a></h3>
-        <% if (post.img) { %>
-          <img src="<%= post.img %>" style="max-width:200px; display:block; margin-bottom:10px;">
-        <% } %>
+        <h3><a href="/post/<%= post.id %>"><%= post.title %></a></h3>
         <p><%= post.content %></p>
       </div>
     </div>
