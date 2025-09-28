@@ -5,11 +5,30 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <ul id="messages"></ul>
-    <form id="form">
-      <input id="input" autocomplete="off" placeholder="Type a message..." />
-      <button>Send</button>
-    </form>
+    <h2>Chat App</h2>
+
+    <!-- Login/Signup Modals -->
+    <div id="authModal" class="modal">
+      <div class="modal-content">
+        <h3 id="modalTitle">Login</h3>
+        <form id="authForm">
+          <input type="text" id="username" placeholder="Username" required /><br />
+          <input type="password" id="password" placeholder="Password" required /><br />
+          <button type="submit">Submit</button>
+        </form>
+        <p id="toggleAuth">Don’t have an account? <a href="#">Sign up</a></p>
+        <p id="authError" class="error"></p>
+      </div>
+    </div>
+
+    <!-- Chat UI (hidden until login) -->
+    <div id="chatUI" style="display:none;">
+      <ul id="messages"></ul>
+      <form id="form">
+        <input id="input" autocomplete="off" placeholder="Type a message..." />
+        <button>Send</button>
+      </form>
+    </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="client.js"></script>

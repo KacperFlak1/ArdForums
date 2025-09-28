@@ -3,28 +3,38 @@ body {
   margin: 0;
   padding: 0;
   background: #f4f4f4;
+  text-align: center;
 }
 
+.error {
+  color: red;
+  font-size: 14px;
+}
+
+/* Chat */
 #messages {
   list-style: none;
-  margin: 0;
+  margin: 0 auto;
   padding: 10px;
-  height: 80vh;
+  height: 60vh;
   overflow-y: auto;
   background: #fff;
-  border-bottom: 1px solid #ddd;
+  border: 1px solid #ddd;
+  width: 80%;
+  max-width: 600px;
 }
 
 #form {
   display: flex;
+  justify-content: center;
   padding: 10px;
-  background: #eee;
 }
 
 #input {
   flex: 1;
   padding: 10px;
   font-size: 16px;
+  max-width: 500px;
 }
 
 button {
@@ -33,4 +43,23 @@ button {
   color: white;
   border: none;
   cursor: pointer;
+}
+
+/* Modal */
+.modal {
+  display: block; /* always shown at start */
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+}
+
+.modal-content {
+  background: #fff;
+  margin: 15% auto;
+  padding: 20px;
+  border-radius: 8px;
+  width: 300px;
+  text-align: center;
 }
