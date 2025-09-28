@@ -6,7 +6,6 @@ import session from "express-session";
 import connectSqlite3 from "connect-sqlite3";
 import sqlite3 from "sqlite3";
 import { open } from "sqlite";
-import path from "path";
 import fs from "fs";
 
 const app = express();
@@ -57,7 +56,10 @@ CREATE TABLE IF NOT EXISTS posts (
 app.post("/register", async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.status(400).send("Missing fields");
-  const hash = await bcrypt.hash(password, 10);
+
+  // Faster for free tier
+  const hash = await bcrypt.hash(password, 8);
+
   try {
     const result = await db.run("INSERT INTO users (username, password) VALUES (?,?)", [username, hash]);
     req.session.userId = result.lastID;

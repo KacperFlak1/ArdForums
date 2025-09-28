@@ -1,58 +1,37 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Retro Forum</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <title>Forum</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body class="dark">
+<body>
   <header>
-    <h1>Retro Forum</h1>
-    <div class="controls">
-      <button id="toggleTheme">Toggle Dark/Light</button>
-      <button id="openSettings">Settings</button>
-      <button id="openModal">New Post</button>
-    </div>
+    <h1>My Forum</h1>
+    <nav>
+      <a href="/logout">Logout</a>
+    </nav>
   </header>
 
-  <!-- Post Modal -->
-  <div id="modal" class="modal">
-    <div class="modal-content">
-      <span id="closeModal" class="close">&times;</span>
-      <h2>Create a Post</h2>
-      <form id="postForm">
-        <input type="text" id="title" placeholder="Title" required />
-        <textarea id="context" placeholder="Write your message..." required></textarea>
-        <div class="form-actions">
-          <button type="submit">Post</button>
-          <button type="button" id="cancelPost">Cancel</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Settings Modal -->
-  <div id="settingsModal" class="modal">
-    <div class="modal-content">
-      <span id="closeSettings" class="close">&times;</span>
-      <h2>Settings</h2>
-      <form id="settingsForm">
-        <input type="text" id="username" placeholder="Your name" />
-        <input type="text" id="avatarUrl" placeholder="Avatar URL" />
-        <textarea id="signature" placeholder="Signature text"></textarea>
-        <div class="form-actions">
-          <button type="submit">Save</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
   <main>
-    <div id="posts" class="posts"></div>
+    <button id="newPostBtn">New Post</button>
+    <div id="posts"></div>
   </main>
 
+  <!-- New Post Modal -->
+  <div id="postModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Create a Post</h2>
+      <form id="postForm">
+        <input type="text" id="postTitle" placeholder="Title" required><br>
+        <textarea id="postContent" placeholder="Content" required></textarea><br>
+        <button type="submit">Post</button>
+      </form>
+    </div>
+  </div>
+
   <script src="/socket.io/socket.io.js"></script>
-  <script src="client.js" defer></script>
+  <script src="client.js"></script>
 </body>
 </html>

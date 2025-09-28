@@ -1,141 +1,43 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const socket = io();
+const socket = io();
+
+// Modal logic
+const modal = document.getElementById("postModal");
+const btn = document.getElementById("newPostBtn");
+const span = document.querySelector(".close");
+
+btn.onclick = () => modal.style.display = "block";
+span.onclick = () => modal.style.display = "none";
+window.onclick = (e) => { if (e.target == modal) modal.style.display = "none"; };
+
+// Handle post form
+document.getElementById("postForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const title = document.getElementById("postTitle").value;
+  const context = document.getElementById("postContent").value;
+  socket.emit("new post", { title, context });
+  modal.style.display = "none";
+});
+
+// Render post
+function renderPost(post) {
   const postsDiv = document.getElementById("posts");
+  const div = document.createElement("div");
+  div.className = "post";
+  const badges = JSON.parse(post.badges || "[]")
+    .map(b => `<span class="badge">${b}</span>`).join(" ");
+  div.innerHTML = `
+    <h3>${post.title}</h3>
+    <p>${post.content}</p>
+    <p><strong>${post.username}</strong> ${badges} <em>${new Date(post.time).toLocaleString()}</em></p>
+    ${post.signature ? `<p class="signature">-- ${post.signature}</p>` : ""}
+  `;
+  postsDiv.prepend(div);
+}
 
-  // --- SETTINGS ---
-  const settingsModal = document.getElementById("settingsModal");
-  const openSettingsBtn = document.getElementById("openSettings");
-  const closeSettingsBtn = document.getElementById("closeSettings");
-  const settingsForm = document.getElementById("settingsForm");
-
-  let userSettings = JSON.parse(localStorage.getItem("userSettings")) || {
-    username: "Anonymous",
-    avatarUrl: "",
-    signature: ""
-  };
-
-  function saveSettings(newSettings) {
-    userSettings = { ...userSettings, ...newSettings };
-    localStorage.setItem("userSettings", JSON.stringify(userSettings));
-  }
-
-  openSettingsBtn.addEventListener("click", () => {
-    settingsModal.style.display = "flex";
-    document.getElementById("username").value = userSettings.username;
-    document.getElementById("avatarUrl").value = userSettings.avatarUrl;
-    document.getElementById("signature").value = userSettings.signature;
-  });
-  closeSettingsBtn.addEventListener("click", () => settingsModal.style.display = "none");
-
-  settingsForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    saveSettings({
-      username: document.getElementById("username").value.trim() || "Anonymous",
-      avatarUrl: document.getElementById("avatarUrl").value.trim(),
-      signature: document.getElementById("signature").value.trim()
-    });
-    settingsModal.style.display = "none";
-  });
-
-  // --- POSTS ---
-  const postForm = document.getElementById("postForm");
-
-  postForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const post = {
-      author: userSettings.username,
-      image: userSettings.avatarUrl,
-      signature: userSettings.signature,
-      title: document.getElementById("title").value.trim(),
-      context: document.getElementById("context").value.trim()
-    };
-    socket.emit("new post", post);
-    postForm.reset();
-    document.getElementById("modal").style.display = "none";
-  });
-
-  // --- SOCKET EVENTS ---
-  socket.on("post history", (history) => {
-    postsDiv.innerHTML = "";
-    history.forEach(renderPost);
-  });
-  socket.on("new post", renderPost);
-
-  // --- RENDER FUNCTION ---
-  function renderPost(post) {
-    const container = document.createElement("div");
-    container.className = "post";
-
-    const authorCol = document.createElement("div");
-    authorCol.className = "post-author";
-
-    const avatar = document.createElement("div");
-    avatar.className = "avatar";
-    if (post.image) {
-      const img = document.createElement("img");
-      img.src = post.image;
-      img.style.width = "80px";
-      img.style.height = "80px";
-      avatar.textContent = "";
-      avatar.appendChild(img);
-    } else {
-      avatar.textContent = post.author[0].toUpperCase();
-    }
-    authorCol.appendChild(avatar);
-
-    const name = document.createElement("h4");
-    name.textContent = post.author;
-    authorCol.appendChild(name);
-
-    const contentCol = document.createElement("div");
-    contentCol.className = "post-content";
-
-    const title = document.createElement("h3");
-    title.textContent = post.title;
-    contentCol.appendChild(title);
-
-    const body = document.createElement("p");
-    body.textContent = post.context;
-    contentCol.appendChild(body);
-
-    if (post.signature) {
-      const sig = document.createElement("p");
-      sig.style.borderTop = "1px dashed #555";
-      sig.style.marginTop = "10px";
-      sig.style.fontSize = "12px";
-      sig.style.color = "#aaa";
-      sig.textContent = post.signature;
-      contentCol.appendChild(sig);
-    }
-
-    const time = document.createElement("small");
-    time.textContent = new Date(post.time).toLocaleString();
-    contentCol.appendChild(time);
-
-    container.appendChild(authorCol);
-    container.appendChild(contentCol);
-    postsDiv.prepend(container);
-  }
-
-  // --- MODAL OPEN/CLOSE ---
-  const modal = document.getElementById("modal");
-  document.getElementById("openModal").addEventListener("click", () => modal.style.display = "flex");
-  document.getElementById("closeModal").addEventListener("click", () => modal.style.display = "none");
-  document.getElementById("cancelPost").addEventListener("click", () => modal.style.display = "none");
-  window.addEventListener("click", e => { if (e.target === modal || e.target === settingsModal) { modal.style.display = "none"; settingsModal.style.display = "none"; }});
+socket.on("post history", (posts) => {
+  posts.forEach(renderPost);
 });
 
-// --- Badge --- //
-const badgeContainer = document.createElement("div");
-badgeContainer.className = "badges";
-
-// post.badges is JSON array like ["Admin","VIP"]
-(JSON.parse(post.badges || "[]")).forEach(badgeName => {
-  const span = document.createElement("span");
-  span.className = "badge";
-  span.textContent = badgeName;
-  badgeContainer.appendChild(span);
+socket.on("new post", (post) => {
+  renderPost(post);
 });
-
-authorCol.appendChild(badgeContainer);
-
