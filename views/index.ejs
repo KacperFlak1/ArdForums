@@ -13,11 +13,17 @@
           <label for="body">Body:</label>
           <textarea id="body" name="body" rows="6" required placeholder="Write your post content here..."></textarea>
         </div>
+        <% if (process.env.NODE_ENV !== 'production') { %>
         <div class="form-group">
           <label for="image">Image (Optional):</label>
           <input type="file" id="image" name="image" accept="image/*" class="file-input">
           <small class="help-text">Max size: 5MB. Accepted formats: JPG, PNG, GIF, WebP</small>
         </div>
+        <% } else { %>
+        <div class="form-group">
+          <small class="help-text">📷 Image uploads are disabled in production due to hosting limitations</small>
+        </div>
+        <% } %>
         <button type="submit" class="create-btn">🚀 Create Post</button>
       </form>
     </div>

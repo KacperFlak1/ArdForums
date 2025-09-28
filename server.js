@@ -13,32 +13,47 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 if (!fs.existsSync("./data")) fs.mkdirSync("./data");
-if (!fs.existsSync("./public/uploads")) fs.mkdirSync("./public/uploads", { recursive: true });
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, './public/uploads/')
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-    cb(null, uniqueSuffix + '-' + file.originalname)
-  }
-});
+// Only create uploads directory in development
+const isProduction = process.env.NODE_ENV === 'production';
+if (!isProduction && !fs.existsSync("./public/uploads")) {
+  fs.mkdirSync("./public/uploads", { recursive: true });
+}
 
-const upload = multer({ 
-  storage: storage,
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
-  },
-  fileFilter: function (req, file, cb) {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed!'), false);
+// Configure multer for file uploads (development only)
+let upload;
+if (isProduction) {
+  // In production (Render), disable file uploads due to ephemeral filesystem
+  upload = multer({ 
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 1 } // Effectively disable uploads
+  });
+} else {
+  // Development configuration with local storage
+  const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, './public/uploads/')
+    },
+    filename: function (req, file, cb) {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+      cb(null, uniqueSuffix + '-' + file.originalname)
     }
-  }
-});
+  });
+
+  upload = multer({ 
+    storage: storage,
+    limits: {
+      fileSize: 5 * 1024 * 1024 // 5MB limit
+    },
+    fileFilter: function (req, file, cb) {
+      if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only image files are allowed!'), false);
+      }
+    }
+  });
+}
 
 const app = express();
 const SQLiteStore = SQLiteStoreFactory(session);
@@ -54,27 +69,39 @@ app.use(expressLayouts);
 app.set("layout", "layout");
 
 // --- SQLite database ---
-const db = new Database("./data/data.db");
+let db;
+try {
+  db = new Database("./data/data.db");
+  console.log('Database connected successfully');
+} catch (error) {
+  console.error('Database connection failed:', error);
+  process.exit(1);
+}
 
-db.exec(`
-CREATE TABLE IF NOT EXISTS users (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  username TEXT UNIQUE NOT NULL,
-  password TEXT NOT NULL,
-  avatar TEXT DEFAULT '/uploads/default.png',
-  badges TEXT DEFAULT '[]'
-)`);
+try {
+  db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    avatar TEXT DEFAULT '/uploads/default.png',
+    badges TEXT DEFAULT '[]'
+  )`);
 
-db.exec(`
-CREATE TABLE IF NOT EXISTS posts (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL,
-  subject TEXT,
-  body TEXT,
-  image TEXT,
-  time TEXT,
-  FOREIGN KEY(user_id) REFERENCES users(id)
-)`);
+  db.exec(`
+  CREATE TABLE IF NOT EXISTS posts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    subject TEXT,
+    body TEXT,
+    image TEXT,
+    time TEXT,
+    FOREIGN KEY(user_id) REFERENCES users(id)
+  )`);
+  console.log('Database tables created successfully');
+} catch (error) {
+  console.error('Error creating database tables:', error);
+}
 
 // --- Lightweight migration for existing DBs created with title/content ---
 try {
@@ -98,6 +125,7 @@ try {
   }
 } catch (e) {
   console.error('Migration check failed:', e);
+  // Continue anyway, as this is not critical for new deployments
 }
 
 // --- Sessions ---
@@ -205,7 +233,8 @@ app.post("/create-post", upload.single('image'), (req, res) => {
   if (!subject || !body) return res.status(400).send("Missing fields");
   
   const time = new Date().toISOString();
-  const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+  // In production, ignore file uploads due to ephemeral filesystem
+  const imagePath = (!isProduction && req.file) ? `/uploads/${req.file.filename}` : null;
   
   db.prepare("INSERT INTO posts (user_id, subject, body, image, time) VALUES (?,?,?,?,?)").run(
     req.session.userId, 
