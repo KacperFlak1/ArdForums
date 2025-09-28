@@ -1,77 +1,53 @@
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
-import bodyParser from "body-parser";
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
 app.use(express.static("public"));
-app.use(bodyParser.json());
 
-// In-memory storage
-let users = []; // { username, password }
-let threads = {
-  general: [],
-};
-
-app.post("/signup", (req, res) => {
-  const { username, password } = req.body;
-  if (users.find((u) => u.username === username)) {
-    return res.status(400).json({ error: "User already exists" });
+// In-memory posts (seed one so you can see it immediately)
+let posts = [
+  {
+    title: "Welcome to the forum",
+    author: "Admin",
+    image: "",
+    context: "This is a seeded welcome post. Create your own with the New Post button!",
+    time: new Date().toISOString()
   }
-  users.push({ username, password });
-  return res.json({ success: true });
-});
+];
 
-app.post("/login", (req, res) => {
-  const { username, password } = req.body;
-  const user = users.find((u) => u.username === username && u.password === password);
-  if (!user) {
-    return res.status(400).json({ error: "Invalid credentials" });
-  }
-  return res.json({ success: true, username });
-});
-
-// Socket.io
 io.on("connection", (socket) => {
-  console.log("✅ A user connected");
+  console.log("A user connected:", socket.id);
+  // send history
+  socket.emit("post history", posts);
 
-  socket.on("join", (username) => {
-    socket.username = username;
-    socket.thread = "general"; // default
-    socket.join("general");
-    socket.emit("chat history", { thread: "general", messages: threads.general });
-  });
+  socket.on("new post", (post) => {
+    console.log("received new post:", post);
+    // basic validation
+    if (!post.title || !post.context) return;
 
-  // Switch threads
-  socket.on("switch thread", (threadName) => {
-    if (!threads[threadName]) threads[threadName] = [];
-    socket.leave(socket.thread);
-    socket.thread = threadName;
-    socket.join(threadName);
-    socket.emit("chat history", { thread: threadName, messages: threads[threadName] });
-  });
-
-  // Create thread
-  socket.on("create thread", (threadName) => {
-    if (!threads[threadName]) threads[threadName] = [];
-    io.emit("thread list", Object.keys(threads));
-  });
-
-  // Handle messages
-  socket.on("chat message", (msg) => {
-    const newMsg = {
-      user: socket.username,
-      text: msg,
-      time: new Date().toISOString(),
+    // normalize
+    const newPost = {
+      title: String(post.title).slice(0, 200),
+      author: post.author ? String(post.author).slice(0,100) : "Anonymous",
+      image: post.image ? String(post.image).slice(0,1000) : "",
+      context: String(post.context).slice(0,5000),
+      time: new Date().toISOString()
     };
-    threads[socket.thread].push(newMsg);
-    if (threads[socket.thread].length > 50) threads[socket.thread].shift();
-    io.to(socket.thread).emit("chat message", newMsg);
+
+    posts.push(newPost);
+    if (posts.length > 100) posts.shift(); // keep last 100
+
+    io.emit("new post", newPost);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("user disconnected:", socket.id);
   });
 });
- 
+
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`🚀 Running on http://localhost:${PORT}`));
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
