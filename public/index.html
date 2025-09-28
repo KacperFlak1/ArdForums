@@ -1,32 +1,17 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Dark Mode Post App</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Chat App</title>
+    <link rel="stylesheet" href="style.css" />
   </head>
-  <body class="dark">
-    <h1>Posts</h1>
-    <button id="toggleTheme">Toggle Dark/Light</button>
-    <button id="openModal">New Post</button>
-
-    <!-- Modal -->
-    <div id="modal" class="modal">
-      <div class="modal-content">
-        <span id="closeModal" class="close">&times;</span>
-        <h2>Create a Post</h2>
-        <form id="postForm">
-          <input type="text" id="title" placeholder="Title" required /><br>
-          <input type="text" id="image" placeholder="Image URL" /><br>
-          <textarea id="context" placeholder="Write something..." required></textarea><br>
-          <button type="submit">Post</button>
-        </form>
-      </div>
-    </div>
-
-    <div id="posts"></div>
+  <body>
+    <ul id="messages"></ul>
+    <form id="form">
+      <input id="input" autocomplete="off" placeholder="Type a message..." />
+      <button>Send</button>
+    </form>
 
     <script src="/socket.io/socket.io.js"></script>
-    <!-- make sure client.js is loaded AFTER the DOM -->
-    <script src="client.js" defer></script>
+    <script src="client.js"></script>
   </body>
 </html>

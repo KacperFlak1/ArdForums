@@ -1,76 +1,36 @@
 body {
-  font-family: Arial, sans-serif;
-  margin: 20px;
-  background: #000000;
+  font-family: sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #f4f4f4;
+}
+
+#messages {
+  list-style: none;
+  margin: 0;
+  padding: 10px;
+  height: 80vh;
+  overflow-y: auto;
+  background: #fff;
+  border-bottom: 1px solid #ddd;
+}
+
+#form {
+  display: flex;
+  padding: 10px;
+  background: #eee;
+}
+
+#input {
+  flex: 1;
+  padding: 10px;
+  font-size: 16px;
 }
 
 button {
-  padding: 10px 15px;
+  padding: 10px;
   background: #007bff;
-  color: rgb(255, 255, 255);
+  color: white;
   border: none;
   cursor: pointer;
-  margin-bottom: 20px;
-}
-.modal {
-  display: none; /* hidden until button pressed */
-  position: fixed;
-  z-index: 10;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.6);
-}
-
-.modal-content {
-  background: #1e1e1e;
-  margin: 10% auto;
-  padding: 20px;
-  border-radius: 8px;
-  width: 400px;
-  position: relative;
-  color: #f1f1f1;
-}
-
-.close {
-  position: absolute;
-  right: 15px;
-  top: 10px;
-  font-size: 24px;
-  cursor: pointer;
-}
-
-#posts {
-  margin-top: 20px;
-}
-
-.post {
-  background: #000000;
-  padding: 15px;
-  margin-bottom: 15px;
-  border-radius: 5px;
-  box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
-}
-
-/* Close Button */
-.close {
-  position: absolute;
-  right: 15px;
-  top: 10px;
-  font-size: 24px;
-  cursor: pointer;
-}
-
-.post {
-  background: #000000;
-  padding: 15px;
-  margin-bottom: 15px;
-  border-radius: 5px;
-  box-shadow: 0 0 5px rgba(0,0,0,0.1);
-}
-
-.post img {
-  max-width: 100%;
-  margin: 10px 0;
 }
