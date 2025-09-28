@@ -3,17 +3,22 @@
 <div class="forum-container">
   <% if (locals.user) { %>
     <div class="create-post">
-      <h3>Create New Post</h3>
-      <form method="POST" action="/create-post" class="post-form">
+      <h3>✏️ Create New Post</h3>
+      <form method="POST" action="/create-post" class="post-form" enctype="multipart/form-data">
         <div class="form-group">
-          <label for="title">Title:</label>
-          <input type="text" id="title" name="title" required>
+          <label for="subject">Subject:</label>
+          <input type="text" id="subject" name="subject" required placeholder="Enter post subject...">
         </div>
         <div class="form-group">
-          <label for="content">Content:</label>
-          <textarea id="content" name="content" rows="4" required></textarea>
+          <label for="body">Body:</label>
+          <textarea id="body" name="body" rows="6" required placeholder="Write your post content here..."></textarea>
         </div>
-        <button type="submit">Create Post</button>
+        <div class="form-group">
+          <label for="image">Image (Optional):</label>
+          <input type="file" id="image" name="image" accept="image/*" class="file-input">
+          <small class="help-text">Max size: 5MB. Accepted formats: JPG, PNG, GIF, WebP</small>
+        </div>
+        <button type="submit" class="create-btn">🚀 Create Post</button>
       </form>
     </div>
     <hr style="border-color: #444; margin: 20px 0;">
@@ -30,8 +35,14 @@
         </div>
       </div>
       <div class="post-content">
-        <h3><a href="/post/<%= post.id %>"><%= post.title %></a></h3>
-        <p><%= post.content %></p>
+        <h3><a href="/post/<%= post.id %>"><%= post.subject %></a></h3>
+        <% if (post.image) { %>
+          <div class="post-image">
+            <img src="<%= post.image %>" alt="Post image" class="content-image">
+          </div>
+        <% } %>
+        <p><%= post.body %></p>
+        <small class="post-time">Posted on <%= new Date(post.time).toLocaleString() %></small>
       </div>
     </div>
   <% }) %>

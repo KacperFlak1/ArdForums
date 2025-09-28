@@ -6,12 +6,39 @@ import expressLayouts from "express-ejs-layouts";
 import path from "path";
 import { fileURLToPath } from "url";
 import Database from "better-sqlite3";
+import multer from "multer";
 import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 if (!fs.existsSync("./data")) fs.mkdirSync("./data");
+if (!fs.existsSync("./public/uploads")) fs.mkdirSync("./public/uploads", { recursive: true });
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, './public/uploads/')
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+    cb(null, uniqueSuffix + '-' + file.originalname)
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: function (req, file, cb) {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  }
+});
 
 const app = express();
 const SQLiteStore = SQLiteStoreFactory(session);
@@ -42,11 +69,36 @@ db.exec(`
 CREATE TABLE IF NOT EXISTS posts (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL,
-  title TEXT,
-  content TEXT,
+  subject TEXT,
+  body TEXT,
+  image TEXT,
   time TEXT,
   FOREIGN KEY(user_id) REFERENCES users(id)
 )`);
+
+// --- Lightweight migration for existing DBs created with title/content ---
+try {
+  const columns = db.prepare(`PRAGMA table_info(posts)`).all();
+  const names = new Set(columns.map(c => c.name));
+  if (!names.has('subject')) {
+    db.exec(`ALTER TABLE posts ADD COLUMN subject TEXT`);
+  }
+  if (!names.has('body')) {
+    db.exec(`ALTER TABLE posts ADD COLUMN body TEXT`);
+  }
+  if (!names.has('image')) {
+    db.exec(`ALTER TABLE posts ADD COLUMN image TEXT`);
+  }
+  // Backfill subject/body from legacy title/content if present
+  if (names.has('title')) {
+    db.exec(`UPDATE posts SET subject = COALESCE(subject, title) WHERE subject IS NULL`);
+  }
+  if (names.has('content')) {
+    db.exec(`UPDATE posts SET body = COALESCE(body, content) WHERE body IS NULL`);
+  }
+} catch (e) {
+  console.error('Migration check failed:', e);
+}
 
 // --- Sessions ---
 app.use(
@@ -68,6 +120,13 @@ app.use((req, res, next) => {
     const user = db.prepare("SELECT * FROM users WHERE id = ?").get(req.session.userId);
     if (user) {
       user.badges = JSON.parse(user.badges || "[]");
+      
+      // Assign admin badge to specific users
+      if ((user.username === 'eluxtra' || user.username === 'kfc') && !user.badges.includes('admin')) {
+        user.badges.push('admin');
+        db.prepare("UPDATE users SET badges = ? WHERE id = ?").run(JSON.stringify(user.badges), user.id);
+      }
+      
       res.locals.user = user;
     }
   }
@@ -140,13 +199,21 @@ app.get("/logout", (req, res) => {
 });
 
 // --- Post creation route ---
-app.post("/create-post", (req, res) => {
+app.post("/create-post", upload.single('image'), (req, res) => {
   if (!req.session.userId) return res.status(401).send("Not logged in");
-  const { title, content } = req.body;
-  if (!title || !content) return res.status(400).send("Missing fields");
+  const { subject, body } = req.body;
+  if (!subject || !body) return res.status(400).send("Missing fields");
   
   const time = new Date().toISOString();
-  db.prepare("INSERT INTO posts (user_id, title, content, time) VALUES (?,?,?,?)").run(req.session.userId, title, content, time);
+  const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+  
+  db.prepare("INSERT INTO posts (user_id, subject, body, image, time) VALUES (?,?,?,?,?)").run(
+    req.session.userId, 
+    subject, 
+    body, 
+    imagePath, 
+    time
+  );
   res.redirect("/");
 });
 

@@ -1,4 +1,4 @@
-<% title = post.title %>
+<% title = post.subject %>
 
 <div class="forum-container">
   <div class="post">
@@ -12,8 +12,14 @@
       </div>
     </div>
     <div class="post-content">
-      <h3><%= post.title %></h3>
-      <p><%= post.content %></p>
+      <h3><%= post.subject %></h3>
+      <% if (post.image) { %>
+        <div class="post-image">
+          <img src="<%= post.image %>" alt="Post image" class="content-image">
+        </div>
+      <% } %>
+      <p><%= post.body %></p>
+      <small class="post-time">Posted on <%= new Date(post.time).toLocaleString() %></small>
     </div>
   </div>
 </div>
