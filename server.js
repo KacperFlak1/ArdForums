@@ -135,5 +135,30 @@ io.on("connection", async (socket) => {
   });
 });
 
+// Example posts
+const posts = [
+  {
+    username: "AdminGuy",
+    title: "Welcome to the Forum!",
+    content: "This is our first post in classic forum style.",
+    img: null,
+    pfp: "/uploads/admin.png",
+    badges: ["admin"]
+  },
+  {
+    username: "CoolUser",
+    title: "Hello World",
+    content: "Glad to be here. Love the retro vibe!",
+    img: null,
+    pfp: "/uploads/user.png",
+    badges: ["vip"]
+  }
+];
+
+app.get("/", (req, res) => {
+  res.render("index", { posts });
+});
+
+
 // --- Start server ---
 server.listen(3000, () => console.log("Server running on port 3000"));
