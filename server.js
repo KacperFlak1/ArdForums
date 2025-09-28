@@ -2,6 +2,7 @@ import express from "express";
 import session from "express-session";
 import SQLiteStoreFactory from "connect-sqlite3";
 import bcrypt from "bcrypt";
+import expressLayouts from "express-ejs-layouts";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -11,12 +12,17 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const SQLiteStore = SQLiteStoreFactory(session);
 
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
-
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
+// --- EJS layout setup ---
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+app.use(expressLayouts);
+app.set("layout", "layout");
+
+// --- Sessions ---
 app.use(
   session({
     store: new SQLiteStore({ db: "sessions.db", dir: __dirname }),
@@ -26,7 +32,7 @@ app.use(
   })
 );
 
-// Fake posts for now
+// --- Mock posts for demo ---
 const posts = [
   {
     username: "AdminGuy",
@@ -46,7 +52,7 @@ const posts = [
   },
 ];
 
-// Routes
+// --- Routes ---
 app.get("/", (req, res) => {
   res.render("index", { posts });
 });
@@ -57,6 +63,6 @@ app.get("/post/:id", (req, res) => {
   res.render("post", { post });
 });
 
-// Run server
+// --- Start server ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on ${PORT}`));
