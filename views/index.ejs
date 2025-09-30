@@ -2,30 +2,11 @@
 
 <div class="forum-container">
   <% if (locals.user) { %>
-    <div class="create-post">
-      <h3>Create New Post</h3>
-      <form method="POST" action="/create-post" class="post-form" enctype="multipart/form-data">
-        <div class="form-group">
-          <label for="subject">Subject:</label>
-          <input type="text" id="subject" name="subject" required placeholder="Enter post subject...">
-        </div>
-        <div class="form-group">
-          <label for="body">Body:</label>
-          <textarea id="body" name="body" rows="6" required placeholder="Write your post content here..."></textarea>
-        </div>
-        <% if (process.env.NODE_ENV !== 'production') { %>
-        <div class="form-group">
-          <label for="image">Image (Optional):</label>
-          <input type="file" id="image" name="image" accept="image/*" class="file-input">
-          <small class="help-text">Max size: 5MB. Accepted formats: JPG, PNG, GIF, WebP</small>
-        </div>
-        <% } else { %>
-        <div class="form-group">
-          <small class="help-text">Image uploads are disabled in production due to hosting limitations</small>
-        </div>
-        <% } %>
-        <button type="submit" class="create-btn">Create Post</button>
-      </form>
+    <div class="create-post-header">
+      <button id="createPostBtn" class="create-post-btn">
+        <span class="btn-icon">+</span>
+        Create Post
+      </button>
     </div>
   <% } %>
   
@@ -60,3 +41,42 @@
     </div>
   <% }) %>
 </div>
+
+<!-- Create Post Modal -->
+<% if (locals.user) { %>
+<div id="createPostModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Create New Post</h3>
+      <span class="close">&times;</span>
+    </div>
+    <div class="modal-body">
+      <form method="POST" action="/create-post" class="post-form" enctype="multipart/form-data">
+        <div class="form-group">
+          <label for="modal-subject">Subject:</label>
+          <input type="text" id="modal-subject" name="subject" required placeholder="Enter post subject...">
+        </div>
+        <div class="form-group">
+          <label for="modal-body">Body:</label>
+          <textarea id="modal-body" name="body" rows="6" required placeholder="Write your post content here..."></textarea>
+        </div>
+        <% if (process.env.NODE_ENV !== 'production') { %>
+        <div class="form-group">
+          <label for="modal-image">Image (Optional):</label>
+          <input type="file" id="modal-image" name="image" accept="image/*" class="file-input">
+          <small class="help-text">Max size: 5MB. Accepted formats: JPG, PNG, GIF, WebP</small>
+        </div>
+        <% } else { %>
+        <div class="form-group">
+          <small class="help-text">Image uploads are disabled in production due to hosting limitations</small>
+        </div>
+        <% } %>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
+          <button type="submit" class="btn create-btn">Create Post</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<% } %>

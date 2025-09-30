@@ -25,5 +25,62 @@
   <main>
     <%- body %>
   </main>
+  
+  <script>
+    // Modal functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const modal = document.getElementById('createPostModal');
+      const btn = document.getElementById('createPostBtn');
+      const closeBtn = document.querySelector('.close');
+      const cancelBtn = document.querySelector('.cancel-btn');
+      
+      // Open modal
+      if (btn) {
+        btn.onclick = function() {
+          modal.style.display = 'block';
+          document.body.style.overflow = 'hidden'; // Prevent background scrolling
+          // Focus on first input
+          setTimeout(() => {
+            document.getElementById('modal-subject').focus();
+          }, 100);
+        }
+      }
+      
+      // Close modal functions
+      function closeModal() {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        // Clear form
+        const form = modal.querySelector('form');
+        if (form) form.reset();
+      }
+      
+      // Close on X button
+      if (closeBtn) {
+        closeBtn.onclick = closeModal;
+      }
+      
+      // Close on Cancel button
+      if (cancelBtn) {
+        cancelBtn.onclick = closeModal;
+      }
+      
+      // Close on background click
+      if (modal) {
+        modal.onclick = function(event) {
+          if (event.target === modal) {
+            closeModal();
+          }
+        }
+      }
+      
+      // Close on Escape key
+      document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && modal.style.display === 'block') {
+          closeModal();
+        }
+      });
+    });
+  </script>
 </body>
 </html>
