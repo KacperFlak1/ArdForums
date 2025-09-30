@@ -79,6 +79,9 @@ try {
 }
 
 try {
+  console.log('Creating database tables...');
+  
+  // Create users table
   db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -87,7 +90,9 @@ try {
     avatar TEXT DEFAULT '/uploads/default.png',
     badges TEXT DEFAULT '[]'
   )`);
+  console.log('Users table created/verified');
 
+  // Create posts table
   db.exec(`
   CREATE TABLE IF NOT EXISTS posts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -98,9 +103,20 @@ try {
     time TEXT,
     FOREIGN KEY(user_id) REFERENCES users(id)
   )`);
-  console.log('Database tables created successfully');
+  console.log('Posts table created/verified');
+  
+  // Verify tables exist
+  const userTableCheck = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='users'").get();
+  const postTableCheck = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='posts'").get();
+  
+  if (userTableCheck && postTableCheck) {
+    console.log('✅ Database tables created successfully');
+  } else {
+    console.error('❌ Table verification failed:', { userTable: !!userTableCheck, postTable: !!postTableCheck });
+  }
 } catch (error) {
-  console.error('Error creating database tables:', error);
+  console.error('❌ Error creating database tables:', error);
+  process.exit(1); // Exit if database setup fails
 }
 
 // --- Lightweight migration for existing DBs created with title/content ---
@@ -204,16 +220,40 @@ app.get("/register", (req, res) => {
 
 // --- Register/Login ---
 app.post("/register", async (req, res) => {
+  console.log('Registration attempt:', { username: req.body.username, hasPassword: !!req.body.password });
+  
   const { username, password } = req.body;
-  if (!username || !password) return res.status(400).send("Missing fields");
+  if (!username || !password) {
+    console.log('Missing registration fields');
+    return res.status(400).send("Missing fields - Please provide both username and password");
+  }
 
-  const hash = await bcrypt.hash(password, 8);
   try {
+    // Test database connection first
+    console.log('Testing database connection...');
+    const testQuery = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='users'").get();
+    if (!testQuery) {
+      console.error('Users table does not exist!');
+      return res.status(500).send("Database error - Users table not found");
+    }
+    console.log('Users table exists, proceeding with registration');
+
+    const hash = await bcrypt.hash(password, 8);
+    console.log('Password hashed successfully');
+    
     const result = db.prepare("INSERT INTO users (username, password) VALUES (?,?)").run(username, hash);
+    console.log('User created successfully:', { id: result.lastInsertRowid, username });
+    
     req.session.userId = result.lastInsertRowid;
+    console.log('Session set, redirecting to home');
     res.redirect("/");
   } catch (err) {
-    res.status(400).send("Username taken");
+    console.error('Registration error:', err);
+    if (err.code === 'SQLITE_CONSTRAINT_UNIQUE' || err.message.includes('UNIQUE constraint failed')) {
+      res.status(400).send("Username already taken - Please choose a different username");
+    } else {
+      res.status(500).send(`Registration failed: ${err.message}`);
+    }
   }
 });
 
@@ -254,18 +294,38 @@ app.post("/create-post", upload.single('image'), (req, res) => {
 
 // --- Debug route for deployment issues ---
 app.get("/debug", (req, res) => {
-  const debugInfo = {
-    nodeEnv: process.env.NODE_ENV,
-    port: process.env.PORT || 3000,
-    hasSessionSecret: !!process.env.SESSION_SECRET,
-    dataDir: './data',
-    dataDirExists: require('fs').existsSync('./data'),
-    dbExists: require('fs').existsSync('./data/data.db'),
-    sessionDbExists: require('fs').existsSync('./data/sessions.db'),
-    postCount: db.prepare("SELECT COUNT(*) as count FROM posts").get(),
-    userCount: db.prepare("SELECT COUNT(*) as count FROM users").get()
-  };
-  res.json(debugInfo);
+  try {
+    const debugInfo = {
+      environment: {
+        nodeEnv: process.env.NODE_ENV,
+        port: process.env.PORT || 3000,
+        hasSessionSecret: !!process.env.SESSION_SECRET,
+        platform: process.platform
+      },
+      filesystem: {
+        dataDir: './data',
+        dataDirExists: require('fs').existsSync('./data'),
+        dbExists: require('fs').existsSync('./data/data.db'),
+        sessionDbExists: require('fs').existsSync('./data/sessions.db')
+      },
+      database: {
+        connected: !!db,
+        tables: db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all(),
+        userTableExists: !!db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='users'").get(),
+        postTableExists: !!db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='posts'").get()
+      },
+      counts: {
+        posts: db.prepare("SELECT COUNT(*) as count FROM posts").get(),
+        users: db.prepare("SELECT COUNT(*) as count FROM users").get()
+      },
+      sampleData: {
+        users: db.prepare("SELECT id, username FROM users LIMIT 3").all()
+      }
+    };
+    res.json(debugInfo);
+  } catch (error) {
+    res.status(500).json({ error: error.message, stack: error.stack });
+  }
 });
 
 // --- Start server ---
