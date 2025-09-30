@@ -299,6 +299,28 @@ button:hover, .btn:hover {
   border: 1px solid #e0e0e0;
 }
 
+/* No posts message */
+.no-posts-message {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: #f8f8f8;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  margin: 2rem 0;
+}
+
+.no-posts-message h2 {
+  margin: 0 0 1rem 0;
+  color: #000000;
+  font-weight: 600;
+}
+
+.no-posts-message p {
+  margin: 0;
+  color: #666666;
+  font-size: 1.1rem;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   header .container {

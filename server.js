@@ -163,15 +163,21 @@ app.use((req, res, next) => {
 
 // --- Routes ---
 app.get("/", (req, res) => {
-  const posts = db.prepare(`
-    SELECT posts.*, users.username, users.avatar, users.badges
-    FROM posts
-    JOIN users ON posts.user_id = users.id
-    ORDER BY posts.id DESC
-  `).all();
+  try {
+    const posts = db.prepare(`
+      SELECT posts.*, users.username, users.avatar, users.badges
+      FROM posts
+      JOIN users ON posts.user_id = users.id
+      ORDER BY posts.id DESC
+    `).all();
 
-  posts.forEach(p => p.badges = JSON.parse(p.badges || "[]"));
-  res.render("index", { posts });
+    posts.forEach(p => p.badges = JSON.parse(p.badges || "[]"));
+    console.log(`Loaded ${posts.length} posts`);
+    res.render("index", { posts });
+  } catch (error) {
+    console.error('Error loading posts:', error);
+    res.render("index", { posts: [] });
+  }
 });
 
 app.get("/post/:id", (req, res) => {
@@ -244,6 +250,22 @@ app.post("/create-post", upload.single('image'), (req, res) => {
     time
   );
   res.redirect("/");
+});
+
+// --- Debug route for deployment issues ---
+app.get("/debug", (req, res) => {
+  const debugInfo = {
+    nodeEnv: process.env.NODE_ENV,
+    port: process.env.PORT || 3000,
+    hasSessionSecret: !!process.env.SESSION_SECRET,
+    dataDir: './data',
+    dataDirExists: require('fs').existsSync('./data'),
+    dbExists: require('fs').existsSync('./data/data.db'),
+    sessionDbExists: require('fs').existsSync('./data/sessions.db'),
+    postCount: db.prepare("SELECT COUNT(*) as count FROM posts").get(),
+    userCount: db.prepare("SELECT COUNT(*) as count FROM users").get()
+  };
+  res.json(debugInfo);
 });
 
 // --- Start server ---

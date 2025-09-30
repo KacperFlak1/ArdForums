@@ -28,6 +28,14 @@
       </form>
     </div>
   <% } %>
+  
+  <% if (posts.length === 0) { %>
+    <div class="no-posts-message">
+      <h2>Welcome to AForums.com!</h2>
+      <p>No posts yet. <% if (locals.user) { %>Create the first post above!<% } else { %><a href="/login">Login</a> or <a href="/register">Register</a> to create the first post!<% } %></p>
+    </div>
+  <% } %>
+  
   <% posts.forEach(post => { %>
     <div class="post">
       <div class="post-user">
