@@ -158,6 +158,19 @@ app.use(
   })
 );
 
+// --- Debug middleware for POST requests ---
+app.use((req, res, next) => {
+  if (req.method === 'POST') {
+    console.log(`📝 POST request to ${req.path}:`, {
+      body: req.body,
+      contentType: req.get('Content-Type'),
+      hasSession: !!req.session,
+      sessionId: req.session?.id
+    });
+  }
+  next();
+});
+
 // --- Middleware to pass user data to templates ---
 app.use((req, res, next) => {
   if (req.session.userId) {
@@ -290,6 +303,31 @@ app.post("/create-post", upload.single('image'), (req, res) => {
     time
   );
   res.redirect("/");
+});
+
+// --- Test registration route ---
+app.get("/test-register", async (req, res) => {
+  try {
+    console.log('Test registration started');
+    const testUsername = `testuser_${Date.now()}`;
+    const testPassword = 'testpass123';
+    
+    const hash = await bcrypt.hash(testPassword, 8);
+    console.log('Test password hashed');
+    
+    const result = db.prepare("INSERT INTO users (username, password) VALUES (?,?)").run(testUsername, hash);
+    console.log('Test user created:', { id: result.lastInsertRowid, username: testUsername });
+    
+    res.json({ 
+      success: true, 
+      message: 'Test user created successfully', 
+      userId: result.lastInsertRowid, 
+      username: testUsername 
+    });
+  } catch (error) {
+    console.error('Test registration failed:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // --- Debug route for deployment issues ---
