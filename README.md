@@ -1,13 +1,13 @@
-# ArdForums
+# AForums.com
 
-A retro-style forum application built with Node.js, Express, and SQLite.
+A clean and minimal forum application built with Node.js, Express, and SQLite.
 
 ## Features
 - User registration and authentication
 - Create and view forum posts
 - SQLite database for data persistence
 - Session-based authentication
-- Retro-style UI
+- Clean black and white UI
 
 ## Local Development
 
@@ -37,7 +37,7 @@ A retro-style forum application built with Node.js, Express, and SQLite.
    - Connect your GitHub repository
 
 2. **Configure your service:**
-   - **Name**: `ardforums` (or your preferred name)
+   - **Name**: `aforums` (or your preferred name)
    - **Environment**: `Node`
    - **Build Command**: `npm install`
    - **Start Command**: `npm start`
@@ -59,7 +59,7 @@ A retro-style forum application built with Node.js, Express, and SQLite.
 
 ## Project Structure
 ```
-ArdForums/
+AForums/
 ├── server.js          # Main application file
 ├── package.json       # Dependencies and scripts
 ├── views/            # EJS templates

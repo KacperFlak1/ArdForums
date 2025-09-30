@@ -1,10 +1,10 @@
-<% title = post.subject %>
+<% title = post.subject + " - AForums.com" %>
 
 <div class="forum-container">
   <div class="post">
     <div class="post-user">
-      <img src="<%= post.avatar %>" alt="pfp">
-      <div><strong><%= post.username %></strong></div>
+      <img src="<%= post.avatar %>" alt="Avatar for <%= post.username %>">
+      <h4><%= post.username %></h4>
       <div class="badges">
         <% post.badges.forEach(b => { %>
           <span class="badge <%= b %>"><%= b %></span>
@@ -12,14 +12,14 @@
       </div>
     </div>
     <div class="post-content">
-      <h3><%= post.subject %></h3>
+      <h2 class="post-subject"><%= post.subject %></h2>
+      <div class="post-body"><%= post.body %></div>
       <% if (post.image) { %>
         <div class="post-image">
           <img src="<%= post.image %>" alt="Post image" class="content-image">
         </div>
       <% } %>
-      <p><%= post.body %></p>
-      <small class="post-time">Posted on <%= new Date(post.time).toLocaleString() %></small>
+      <div class="post-time">Posted on <%= new Date(post.time).toLocaleString() %></div>
     </div>
   </div>
 </div>
